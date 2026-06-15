@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Расписание ЧПТК</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: white;
+      --text: #1e293b;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --header-bg: white;
+    }
+    body.dark {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --border: #334155;
+      --header-bg: #1e293b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      background: var(--header-bg);
+      box-shadow: var(--shadow);
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-area h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover, select:hover {
+      border-color: var(--accent);
+      background: #f8fafc;
+    }
+    body.dark button:hover,
+    body.dark select:hover {
+      background: #334155;
+    }
+
+    .theme-toggle {
+      border: none;
+      font-size: 1.2rem;
+      background: transparent;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .schedule-card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .image-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      background: #f1f5f9; /* лёгкий фон под изображением */
+      padding: 1rem;
+    }
+
+    body.dark .image-wrapper {
+      background: #0f172a;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.75rem 1.5rem;
+      gap: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: #64748b;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .toolbar {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <h1>📅 Расписание ЧПТК</h1>
+    </div>
+    <div class="controls">
+      <select id="groupSelect">
+        <option value="meh-15_ehs-15_ehs-35">МЭХ-15, ЭХС-15, ЭХС-35</option>
+        <!-- Добавь свои группы по примеру: -->
+        <!-- <option value="другая_группа">Название группы</option> -->
+      </select>
+      <button id="fullscreenBtn" title="На весь экран">⛶</button>
+      <button id="printBtn" title="Печать">🖨️</button>
+      <button id="downloadBtn" title="Скачать">⬇️</button>
+      <button id="themeToggle" class="theme-toggle" title="Сменить тему">🌓</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="schedule-card">
+      <div class="image-wrapper">
+        <img id="scheduleImage" src="https://chptk.ru/pages/raspisanie/2025-2026/sum/meh-15_ehs-15_ehs-35.jpg" alt="Расписание">
+      </div>
+      <div class="toolbar">
+        <button id="zoomInBtn">🔍 +</button>
+        <button id="zoomOutBtn">🔍 –</button>
+        <button id="resetZoomBtn">↺ Сброс</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    ЧПТК · Расписание занятий · 2025/2026
+  </footer>
+
+  <script>
+    // ---------- Переключение групп ----------
+    const groupSelect = document.getElementById('groupSelect');
+    const img = document.getElementById('scheduleImage');
+
+    // Базовый путь (можно изменить под свою структуру)
+    const baseUrl = 'https://chptk.ru/pages/raspisanie/2025-2026/sum/';
+
+    groupSelect.addEventListener('change', function() {
+      const group = this.value;
+      // Если добавишь свои группы, они будут загружаться как baseUrl + group + '.jpg'
+      img.src = baseUrl + group + '.jpg';
+      img.alt = 'Расписание ' + this.options[this.selectedIndex].text;
+    });
+
+    // ---------- Полноэкранный режим ----------
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (img.requestFullscreen) {
+        img.requestFullscreen();
+      } else if (img.webkitRequestFullscreen) {
+        img.webkitRequestFullscreen();
+      }
+    });
+
+    // ---------- Печать ----------
+    document.getElementById('printBtn').addEventListener('click', () => {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head><title>Расписание ЧПТК</title></head>
+          <body style="margin:0; display:flex; justify-content:center; background:#fff;">
+            <img src="${img.src}" style="max-width:100%; height:auto;" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    });
+
+    // ---------- Скачать ----------
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
+      const a = document.createElement('a');
+      a.href = img.src;
+      a.download = 'raspisanie-chptk.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    // ---------- Зум ----------
+    let scale = 1;
+    const zoomIn = document.getElementById('zoomInBtn');
+    const zoomOut = document.getElementById('zoomOutBtn');
+    const resetZoom = document.getElementById('resetZoomBtn');
+
+    zoomIn.addEventListener('click', () => {
+      scale = Math.min(scale + 0.15, 3);
+      img.style.transform = `scale(${scale})`;
+    });
+
+    zoomOut.addEventListener('click', () => {
+      scale = Math.max(scale - 0.15, 0.5);
+      img.style.transform = `scale(${scale})`;
+    });
+
+    resetZoom.addEventListener('click', () => {
+      scale = 1;
+      img.style.transform = 'scale(1)';
+    });
+
+    // ---------- Тёмная тема ----------
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      themeToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌓';
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Восстановление темы
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+      themeToggle.textContent = '☀️';
+    }
+  </script>
+</body>
+</html>
